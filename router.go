@@ -23,6 +23,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := websocket.Upgrade(w, r, w.Header(), 1024, 1024)
 	if err != nil {
 		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
+		return
 	}
 
 	go processWsMsg(conn)
@@ -47,6 +48,7 @@ func processWsMsg(conn *websocket.Conn) {
 		err := conn.ReadJSON(&m)
 		if err != nil {
 			fmt.Println("Error reading json.", err)
+			break
 		}
 
 		fmt.Printf("Got message: %#v\n", m)

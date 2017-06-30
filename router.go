@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"gopkg.in/validator.v2"
 )
 
 func NewRouter() *mux.Router {
@@ -32,13 +33,13 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 type WSMsg struct {
 	Action string
 
-	Volume uint8
-	Frequency uint16
-	Duration uint16
+	Volume uint8 `validate:"min=0,max=100"`
+	Frequency uint16 `validate:"min=0,max=65535"`
+	Duration uint16 `validate:"min=0,max=65535"`
 
-	PortId uint8
-	Speed int8
-	Brake uint8
+	PortId uint8 `validate:"min=0,max=255"`
+	Speed int8 `validate:"min=0,max=255"`
+	Brake uint8 `validate:"min=0,max=1"`
 }
 
 func processWsMsg(conn *websocket.Conn) {
@@ -48,7 +49,12 @@ func processWsMsg(conn *websocket.Conn) {
 		err := conn.ReadJSON(&m)
 		if err != nil {
 			fmt.Println("Error reading json.", err)
-			break
+			continue
+		}
+
+		if errs := validator.Validate(m); errs != nil {
+			fmt.Println("Validation failed", err)
+			continue
 		}
 
 		fmt.Printf("Got message: %#v\n", m)

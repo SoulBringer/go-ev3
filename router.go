@@ -32,6 +32,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 type WSMsg struct {
 	Action string
+	Index uint
 
 	Volume uint8 `validate:"min=0,max=100"`
 	Frequency uint16 `validate:"min=0,max=65535"`
@@ -43,19 +44,23 @@ type WSMsg struct {
 }
 
 func processWsMsg(conn *websocket.Conn) {
+	var index uint
 	for {
 		m := WSMsg{}
 
 		err := conn.ReadJSON(&m)
 		if err != nil {
 			fmt.Println("Error reading json.", err)
-			continue
+			break
 		}
 
 		if errs := validator.Validate(m); errs != nil {
 			fmt.Println("Validation failed", err)
 			continue
 		}
+
+		index++
+		m.Index = index
 
 		fmt.Printf("Got message: %#v\n", m)
 
